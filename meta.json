@@ -7,6 +7,10 @@
   "owner": "yourmomsbasement",
   "version": "1.0.0.0",
   "targetAbi": "10.11.0.0",
-  "timestamp": "2026-04-13T14:35:38Z",
-  "changelog": "Initial release."
+  "timestamp": "2026-04-13T00:00:00Z",
+  "changelog": "Initial release.",
+  "status": "Active",
+  "autoUpdate": true,
+  "assemblies": ["Jellyfin.Plugin.SubtitleStripper.dll"]
 }
+

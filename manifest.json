@@ -8,6 +8,14 @@
     "owner": "yourmomsbasement",
     "versions": [
       {
+        "version": "1.0.1.0",
+        "changelog": "Release 1.0.1.0",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/yourmomsbasement/SubtitleStripper/releases/download/v1.0.1/SubtitleStripper_1.0.1.zip",
+        "checksum": "3ae2bbf2efcc43df1e6a886517cce529",
+        "timestamp": "2026-04-13T17:32:00Z"
+      },
+      {
         "version": "1.0.0.0",
         "changelog": "Release 1.0.0.0",
         "targetAbi": "10.11.0.0",

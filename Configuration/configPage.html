@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Subtitle Stripper</title>
+</head>
+<body>
+  <div data-role="page" class="page type-interior pluginConfigurationPage"
+       data-require="emby-input,emby-button,emby-checkbox,emby-select">
+
+    <div data-role="content">
+      <div class="content-primary">
+
+        <form id="SubtitleStripperConfigForm">
+
+          <div class="sectionTitleContainer flex align-items-center">
+            <h2 class="sectionTitle">Subtitle Stripper</h2>
+          </div>
+
+          <!-- ── General ──────────────────────────────────────────────── -->
+          <div class="verticalSection">
+            <h3 class="checkboxListLabel">General</h3>
+
+            <div class="checkboxContainer checkboxContainer-withDescription">
+              <label class="emby-checkbox-label">
+                <input id="chkDryRun" type="checkbox" is="emby-checkbox" />
+                <span>Dry run (log only, no file changes)</span>
+              </label>
+            </div>
+
+            <div class="checkboxContainer checkboxContainer-withDescription">
+              <label class="emby-checkbox-label">
+                <input id="chkKeepBackup" type="checkbox" is="emby-checkbox" />
+                <span>Keep a .bak copy of the original file</span>
+              </label>
+            </div>
+
+            <div class="checkboxContainer checkboxContainer-withDescription">
+              <label class="emby-checkbox-label">
+                <input id="chkProcessOnItemAdded" type="checkbox" is="emby-checkbox" />
+                <span>Automatically process new files when added to the library</span>
+              </label>
+            </div>
+
+            <div class="inputContainer">
+              <label class="inputLabel inputLabelUnfocused" for="txtFfmpegPath">
+                ffmpeg path override
+              </label>
+              <input id="txtFfmpegPath" type="text" is="emby-input"
+                     placeholder="Leave empty to use Jellyfin's built-in ffmpeg" />
+              <div class="fieldDescription">
+                Only set this if you want to use a different ffmpeg binary than the one
+                Jellyfin already knows about.
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Library Scope ────────────────────────────────────────────── -->
+          <div class="verticalSection">
+            <h3 class="checkboxListLabel">Library Scope</h3>
+            <div class="fieldDescription" style="margin-bottom:1em">
+              Select which libraries to process. Leave all unchecked to process every library.
+            </div>
+            <div id="libraryList" class="checkboxList"></div>
+          </div>
+
+          <!-- ── PGS → SRT ─────────────────────────────────────────────── -->
+          <div class="verticalSection">
+            <h3 class="checkboxListLabel">PGS → SRT Conversion</h3>
+            <div class="fieldDescription" style="margin-bottom:1em">
+              Before stripping subtitles, OCR any image-based Blu-ray (PGS) subtitle streams
+              and save them as <code>.srt</code> sidecar files so the text is preserved.
+              Requires <strong>pgsrip</strong> (<code>pip install pgsrip</code>) and
+              <strong>Tesseract</strong> to be installed on the host.
+            </div>
+
+            <div class="checkboxContainer checkboxContainer-withDescription">
+              <label class="emby-checkbox-label">
+                <input id="chkConvertPgs" type="checkbox" is="emby-checkbox" />
+                <span>Convert PGS subtitles to SRT before stripping</span>
+              </label>
+            </div>
+
+            <div class="inputContainer">
+              <label class="inputLabel inputLabelUnfocused" for="txtPgsRipPath">
+                pgsrip executable path
+              </label>
+              <input id="txtPgsRipPath" type="text" is="emby-input"
+                     placeholder="Leave empty to use 'pgsrip' from PATH" />
+            </div>
+
+            <div class="inputContainer">
+              <label class="inputLabel inputLabelUnfocused" for="txtFallbackLang">
+                Fallback OCR language (ISO 639-2)
+              </label>
+              <input id="txtFallbackLang" type="text" is="emby-input" placeholder="eng" />
+              <div class="fieldDescription">
+                Used when a subtitle stream has no language tag.
+                Must match an installed Tesseract language data file.
+              </div>
+            </div>
+
+            <div class="inputContainer">
+              <label class="inputLabel inputLabelUnfocused" for="txtLangFilter">
+                Languages to convert (ISO 639-2, comma-separated)
+              </label>
+              <input id="txtLangFilter" type="text" is="emby-input" placeholder="e.g. en,fr,pt-BR — leave empty for all" />
+              <div class="fieldDescription">
+                IETF language codes (e.g. <code>en</code>, <code>fr</code>, <code>pt-BR</code>).
+                Only PGS streams matching these will be OCR'd. Leave empty to convert all.
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <button is="emby-button" type="submit" class="raised button-submit block">
+              <span>Save</span>
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      var SubtitleStripperConfig = {
+        pluginId: "f3e2d1c0-b9a8-7654-3210-fedcba987654",
+
+        load: function (page) {
+          var self = this;
+          Promise.all([
+            ApiClient.getPluginConfiguration(self.pluginId),
+            ApiClient.getJSON(ApiClient.getUrl('Library/VirtualFolders'))
+          ]).then(function (results) {
+            var config    = results[0];
+            var libraries = results[1];
+            var selected  = (config.SelectedLibraryIds || "").split(',').filter(Boolean);
+
+            // Render library checkboxes
+            var list = page.querySelector("#libraryList");
+            list.innerHTML = "";
+            libraries.forEach(function (lib) {
+              var id      = lib.ItemId;
+              var checked = selected.indexOf(id) >= 0 ? "checked" : "";
+              list.innerHTML +=
+                '<div class="checkboxContainer">' +
+                  '<label class="emby-checkbox-label">' +
+                    '<input type="checkbox" is="emby-checkbox" class="chkLibrary" data-id="' + id + '" ' + checked + ' />' +
+                    '<span>' + lib.Name + '</span>' +
+                  '</label>' +
+                '</div>';
+            });
+
+            page.querySelector("#chkDryRun").checked              = config.DryRun;
+            page.querySelector("#chkKeepBackup").checked          = config.KeepBackup;
+            page.querySelector("#chkProcessOnItemAdded").checked  = config.ProcessOnItemAdded;
+            page.querySelector("#txtFfmpegPath").value            = config.FfmpegPath || "";
+            page.querySelector("#chkConvertPgs").checked          = config.ConvertPgsToSrt;
+            page.querySelector("#txtPgsRipPath").value            = config.PgsRipPath || "";
+            page.querySelector("#txtFallbackLang").value          = config.FallbackOcrLanguage || "eng";
+            page.querySelector("#txtLangFilter").value            = config.PgsLanguageFilter || "";
+            Dashboard.hideLoadingMsg();
+          });
+        },
+
+        save: function (page) {
+          var self = this;
+          ApiClient.getPluginConfiguration(this.pluginId).then(function (config) {
+            // Collect checked library IDs
+            var checkedLibs = Array.from(page.querySelectorAll(".chkLibrary:checked"))
+              .map(function (el) { return el.getAttribute("data-id"); });
+
+            config.SelectedLibraryIds  = checkedLibs.join(',');
+            config.DryRun              = page.querySelector("#chkDryRun").checked;
+            config.KeepBackup          = page.querySelector("#chkKeepBackup").checked;
+            config.ProcessOnItemAdded  = page.querySelector("#chkProcessOnItemAdded").checked;
+            config.FfmpegPath          = page.querySelector("#txtFfmpegPath").value;
+            config.ConvertPgsToSrt     = page.querySelector("#chkConvertPgs").checked;
+            config.PgsRipPath          = page.querySelector("#txtPgsRipPath").value;
+            config.FallbackOcrLanguage = page.querySelector("#txtFallbackLang").value || "eng";
+            config.PgsLanguageFilter   = page.querySelector("#txtLangFilter").value;
+
+            ApiClient.updatePluginConfiguration(self.pluginId, config).then(function () {
+              Dashboard.processPluginConfigurationUpdateResult();
+            });
+          });
+        }
+      };
+
+      document.querySelector("#SubtitleStripperConfigForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          Dashboard.showLoadingMsg();
+          SubtitleStripperConfig.save(document);
+        });
+
+      SubtitleStripperConfig.load(document);
+    </script>
+  </div>
+</body>
+</html>

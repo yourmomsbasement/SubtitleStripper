@@ -1,0 +1,20 @@
+[
+  {
+    "category": "General",
+    "guid": "f3e2d1c0-b9a8-7654-3210-fedcba987654",
+    "name": "Subtitle Stripper",
+    "description": "Removes embedded subtitle streams from video files using ffmpeg. Optionally OCR-converts PGS (Blu-ray image) subtitles to .srt sidecars via pgsrip before stripping.",
+    "overview": "Strips embedded subtitles from your Jellyfin library. Supports dry-run, backups, library scoping, and optional PGS→SRT OCR conversion.",
+    "owner": "OWNER",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "Initial release.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/OWNER/REPO/releases/download/v1.0.0/SubtitleStripper_1.0.0.zip",
+        "checksum": "PLACEHOLDER",
+        "timestamp": "2026-04-13T00:00:00Z"
+      }
+    ]
+  }
+]

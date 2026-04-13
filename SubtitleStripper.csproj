@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>Jellyfin.Plugin.SubtitleStripper</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.SubtitleStripper</RootNamespace>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Jellyfin plugin SDK — packages renamed to Jellyfin.* as of 10.10+        -->
+    <!-- PrivateAssets=All means they compile against but don't bundle into the DLL -->
+    <PackageReference Include="Jellyfin.Model"      Version="10.11.8" PrivateAssets="All" />
+    <PackageReference Include="Jellyfin.Common"     Version="10.11.8" PrivateAssets="All" />
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.8" PrivateAssets="All" />
+    <PackageReference Include="Jellyfin.Data"       Version="10.11.8" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!-- Embed the dashboard config page as a resource -->
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration\configPage.html" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Get version from tag
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: |
+          dotnet build SubtitleStripper.csproj -c Release \
+            /p:Version=${{ steps.ver.outputs.version }}
+
+      - name: Update meta.json
+        run: |
+          VERSION=${{ steps.ver.outputs.version }}
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          jq \
+            --arg v "${VERSION}.0" \
+            --arg t "$TIMESTAMP" \
+            '.version = $v | .timestamp = $t' \
+            meta.json > meta.tmp.json
+          mv meta.tmp.json meta.json
+
+      - name: Package ZIP
+        id: zip
+        run: |
+          VERSION=${{ steps.ver.outputs.version }}
+          ZIP="SubtitleStripper_${VERSION}.zip"
+          zip -j "$ZIP" \
+            "bin/Release/net9.0/Jellyfin.Plugin.SubtitleStripper.dll" \
+            meta.json
+          MD5=$(md5sum "$ZIP" | cut -d' ' -f1)
+          echo "zip=$ZIP"     >> "$GITHUB_OUTPUT"
+          echo "md5=$MD5"     >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update manifest.json
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          VERSION=${{ steps.zip.outputs.version }}
+          MD5=${{ steps.zip.outputs.md5 }}
+          ZIP=${{ steps.zip.outputs.zip }}
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          jq \
+            --arg v "${VERSION}.0" \
+            --arg md5 "$MD5" \
+            --arg url "https://github.com/${REPO}/releases/download/v${VERSION}/${ZIP}" \
+            --arg ts "$TIMESTAMP" \
+            '.[0].versions = [{
+               version:   $v,
+               changelog: ("Release " + $v),
+               targetAbi: "10.11.0.0",
+               sourceUrl: $url,
+               checksum:  $md5,
+               timestamp: $ts
+             }] + .[0].versions' \
+            manifest.json > manifest.tmp.json
+          mv manifest.tmp.json manifest.json
+
+      - name: Commit manifest update
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add meta.json manifest.json
+          git commit -m "chore: release v${{ steps.ver.outputs.version }}"
+          git push origin HEAD:main
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.zip.outputs.zip }}
+          generate_release_notes: true

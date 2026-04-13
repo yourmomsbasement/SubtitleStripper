@@ -61,7 +61,7 @@ Write-Host @"
 {
   "version": "$Version4",
   "changelog": "...",
-  "targetAbi": "10.11.0.0",
+  "targetAbi": "10.9.0.0",
   "sourceUrl": "https://github.com/OWNER/REPO/releases/download/v$Version/$ZipName",
   "checksum": "$md5",
   "timestamp": "$timestamp"

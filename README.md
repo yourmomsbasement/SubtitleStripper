@@ -137,6 +137,14 @@ To build and package a release ZIP:
 .\package.ps1 -Version 1.0.0
 ```
 
+## Credits
+
+PGS → SRT conversion is powered by [pgsrip](https://github.com/ratoaq2/pgsrip) by [@ratoaq2](https://github.com/ratoaq2) — a fantastic tool for OCR-converting Blu-ray image subtitles to text. This plugin would not have PGS support without it.
+
+OCR engine provided by [Tesseract](https://github.com/tesseract-ocr/tesseract).
+
+Subtitle stripping and stream detection handled by [ffmpeg](https://ffmpeg.org/).
+
 ## License
 
 MIT

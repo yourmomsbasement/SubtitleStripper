@@ -12,6 +12,14 @@
         "changelog": "Release 1.0.0.0",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/yourmomsbasement/SubtitleStripper/releases/download/v1.0.0/SubtitleStripper_1.0.0.zip",
+        "checksum": "11f8a768038f647e4536a6ff31aa8684",
+        "timestamp": "2026-04-13T14:14:41Z"
+      },
+      {
+        "version": "1.0.0.0",
+        "changelog": "Release 1.0.0.0",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/yourmomsbasement/SubtitleStripper/releases/download/v1.0.0/SubtitleStripper_1.0.0.zip",
         "checksum": "c464c64a4b0c86ca9759ae86bb46d3e0",
         "timestamp": "2026-04-13T14:08:51Z"
       },
